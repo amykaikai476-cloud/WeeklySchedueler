@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Weekly Scheduler</title>
+<style>
+  * {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+  
+  body {
+    margin: 0;
+    background: white;
+    color: black;
+    padding: 20px;
+  }
+  
+  .app {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid black;
+  }
+  
+  header h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+  
+  .login, .userbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  
+  .login input {
+    padding: 8px;
+    border: 1px solid black;
+    background: white;
+  }
+  
+  button.btn {
+    background: black;
+    border: 1px solid black;
+    color: white;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+  
+  button.ghost {
+    background: white;
+    color: black;
+    border: 1px solid black;
+    padding: 8px 16px;
+    cursor: pointer;
+  }
+
+  .board {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .col {
+    flex: 1;
+    min-width: 130px;
+    background: white;
+    padding: 10px;
+    border: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    height: 70vh;
+  }
+  
+  .col .col-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid black;
+  }
+  
+  .col h3 {
+    margin: 0;
+    font-size: 16px;
+  }
+  
+  .add-btn {
+    background: black;
+    color: white;
+    border: 1px solid black;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .column-body {
+    overflow: auto;
+    padding-bottom: 8px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card {
+    background: white;
+    padding: 10px;
+    border: 2px solid black;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: grab;
+  }
+  
+  .card:active {
+    cursor: grabbing;
+  }
+  
+  .card .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid black;
+  }
+  
+  .owner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  
+  .owner .chip {
+    padding: 4px 8px;
+    border: 1px solid black;
+    background: black;
+    color: white;
+    font-weight: bold;
+    font-size: 12px;
+  }
+  
+  .card .fields {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .field label {
+    font-size: 11px;
+    font-weight: bold;
+  }
+  
+  .field .value {
+    padding: 6px;
+    border: 1px solid black;
+    min-height: 24px;
+    background: white;
+    outline: none;
+  }
+  
+  .field .value:focus {
+    border: 2px solid black;
+  }
+  
+  .field input[type="datetime-local"] {
+    padding: 6px;
+    border: 1px solid black;
+    background: white;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+  }
+  
+  .field input[type="datetime-local"]:focus {
+    border: 2px solid black;
+    outline: none;
+  }
+
+  .card .actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    padding-top: 8px;
+    border-top: 1px solid black;
+  }
+  
+  .small {
+    padding: 4px 8px;
+    border: 1px solid black;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .empty {
+    padding: 20px;
+    border: 1px dashed black;
+    text-align: center;
+    font-size: 14px;
+  }
+  
+  .error-msg {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: black;
+    color: white;
+    padding: 15px 20px;
+    border: 2px solid black;
+    max-width: 350px;
+    z-index: 1000;
+  }
+
+  @media print {
+    body {
+      padding: 10px;
+    }
+    header, .login, .userbar, .add-btn, .actions, button, .error-msg {
+      display: none !important;
+    }
+    .col {
+      height: auto;
+      page-break-inside: avoid;
+      border: 1px solid black;
+    }
+    .board {
+      display: block;
+    }
+    .col {
+      margin-bottom: 20px;
+    }
+    .card {
+      page-break-inside: avoid;
+      margin-bottom: 10px;
+    }
+    .field .value {
+      border: none;
+      padding: 2px;
+      min-height: auto;
+    }
+    .field input {
+      border: none;
+    }
+  }
+
+  @media (max-width: 900px) {
+    .board {
+      flex-direction: column;
+    }
+    .col {
+      height: auto;
+      min-width: unset;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Weekly Scheduler</h1>
+
+    <div id="authArea">
+      <div class="login" id="loginBox">
+        <input id="username" placeholder="username" />
+        <input id="password" placeholder="password" type="password" />
+        <button class="btn" id="loginBtn">Log in</button>
+      </div>
+
+      <div class="userbar" id="userBar" style="display:none;">
+        <div id="who" style="font-weight:bold;"></div>
+        <button class="ghost" id="logoutBtn">Log out</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="dashboard" style="display:none;">
+    <div style="margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;">
+      <div style="color:black;">Add your plans to the schedule.</div>
+      <div style="display:flex;gap:8px;">
+        <button class="ghost" id="undoBtn">↶ Undo</button>
+        <button class="ghost" id="redoBtn">↷ Redo</button>
+        <button class="ghost" id="exportBtn">📥 Export</button>
+        <button class="ghost" id="importBtn">📤 Import</button>
+        <button class="ghost" id="printBtn">Print Schedule</button>
+        <button class="ghost" id="clearBtn">Clear All Data</button>
+      </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".json" style="display:none;" />
+
+    <div class="board" id="board">
+    </div>
+  </main>
+</div>
+
+<script>
+// Stack implementation for undo/redo
+class Stack {
+  constructor() {
+    this.items = [];
+  }
+  
+  push(element) {
+    this.items.push(element);
+  }
+  
+  pop() {
+    if (this.isEmpty()) return null;
+    return this.items.pop();
+  }
+  
+  peek() {
+    if (this.isEmpty()) return null;
+    return this.items[this.items.length - 1];
+  }
+  
+  isEmpty() {
+    return this.items.length === 0;
+  }
+  
+  size() {
+    return this.items.length;
+  }
+  
+  clear() {
+    this.items = [];
+  }
+}
+
+const users = {
+  Linus: { password: "linus123" },
+  Jacinta: { password: "1234" },
+  Lenkai: { password: "eighte1" },
+  Aaron: { password: "12345" }
+};
+
+const DAYS = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const STORAGE_KEY = 'weekly_scheduler_plans';
+
+let currentUser = null;
+let model = { plans: [] };
+
+// Undo/Redo stacks
+const undoStack = new Stack();
+const redoStack = new Stack();
+const MAX_HISTORY = 50;
+
+function saveStateToHistory() {
+  try {
+    const state = JSON.parse(JSON.stringify(model));
+    undoStack.push(state);
+    
+    if (undoStack.size() > MAX_HISTORY) {
+      undoStack.items.shift();
+    }
+    
+    redoStack.clear();
+  } catch(e) {
+    console.error('Failed to save history:', e);
+  }
+}
+
+function showError(message) {
+  const errorDiv = document.createElement('div');
+  errorDiv.className = 'error-msg';
+  errorDiv.textContent = message;
+  document.body.appendChild(errorDiv);
+  setTimeout(() => errorDiv.remove(), 5000);
+}
+
+async function loadModel(){
+  try {
+    const result = localStorage.getItem(STORAGE_KEY);
+    if (result) {
+      return JSON.parse(result);
+    }
+  } catch(e) {
+    console.error('Load error:', e);
+  }
+  return { plans: [] };
+}
+
+async function saveModel(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
+  } catch(e) {
+    console.error('Save failed:', e);
+    showError('Failed to save changes.');
+  }
+}
+
+function hasTimeConflict(newDateTime, excludePlanId) {
+  if (!newDateTime) return false;
+  
+  const newDate = new Date(newDateTime);
+  
+  for (let plan of model.plans) {
+    if (plan.id === excludePlanId) continue;
+    if (!plan.datetime) continue;
+    
+    const existingDate = new Date(plan.datetime);
+    
+    // Check if events are within 30 minutes of each other
+    const timeDiff = Math.abs(newDate - existingDate);
+    const minutesDiff = timeDiff / (1000 * 60);
+    
+    if (minutesDiff < 30) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function createPlan(owner, day){
+  return {
+    id: 'p_' + Date.now() + '_' + Math.floor(Math.random()*10000),
+    user: owner,
+    day: day,
+    plan: '',
+    transport: '',
+    datetime: '',
+    location: '',
+    createdAt: Date.now()
+  };
+}
+
+function formatDateTime(dateTimeString) {
+  if (!dateTimeString) return '';
+  const date = new Date(dateTimeString);
+  return date.toLocaleString('en-US', { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+const board = document.getElementById('board');
+
+function buildBoard(){
+  board.innerHTML = '';
+  
+  for(let d=0; d<7; d++){
+    const col = document.createElement('div');
+    col.className = 'col';
+    col.dataset.day = String(d);
+
+    const head = document.createElement('div');
+    head.className = 'col-head';
+    const h3 = document.createElement('h3');
+    h3.textContent = DAYS[d];
+    head.appendChild(h3);
+
+    const add = document.createElement('button');
+    add.className = 'add-btn';
+    add.textContent = '+ Add';
+    add.onclick = async () => {
+      if (!currentUser) { 
+        alert('Log in first'); 
+        return; 
+      }
+      
+      saveStateToHistory();
+      
+      const p = createPlan(currentUser, d);
+      model.plans.push(p);
+      await saveModel();
+      render();
+
+      setTimeout(()=> {
+        const el = document.querySelector(`.card[data-id="${p.id}"] .value[data-field="plan"]`);
+        if (el) el.focus();
+      }, 100);
+    };
+    head.appendChild(add);
+    col.appendChild(head);
+
+    const body = document.createElement('div');
+    body.className = 'column-body';
+    
+    body.ondragover = (ev) => ev.preventDefault();
+    body.ondrop = async (ev) => {
+      ev.preventDefault();
+      const id = ev.dataTransfer.getData('text/plain');
+      const p = model.plans.find(x => x.id === id);
+      if (p) {
+        saveStateToHistory();
+        p.day = d;
+        await saveModel();
+        render();
+      }
+    };
+
+    col.appendChild(body);
+    board.appendChild(col);
+  }
+}
+
+function render(){
+  for(let d=0; d<7; d++){
+    const col = board.querySelector(`.col[data-day="${d}"]`);
+    const body = col.querySelector('.column-body');
+    body.innerHTML = '';
+    
+    const plans = model.plans.filter(p => p.day === d);
+    
+    if (plans.length === 0){
+      const em = document.createElement('div');
+      em.className = 'empty';
+      em.textContent = 'No plans yet';
+      body.appendChild(em);
+    } else {
+      plans.sort((a,b)=>a.createdAt - b.createdAt);
+      plans.forEach(p => body.appendChild(createCardElement(p)));
+    }
+  }
+  
+  document.getElementById('who').textContent = currentUser || '';
+}
+
+function createCardElement(p){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.draggable = true;
+  card.dataset.id = p.id;
+
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+
+  const owner = document.createElement('div');
+  owner.className = 'owner';
+  const chip = document.createElement('span');
+  chip.className = 'chip';
+  chip.textContent = p.user;
+  owner.appendChild(chip);
+
+  const timeLabel = document.createElement('div');
+  timeLabel.style.fontSize = '11px';
+  timeLabel.style.fontWeight = 'bold';
+  timeLabel.textContent = p.datetime ? formatDateTime(p.datetime) : '';
+
+  meta.appendChild(owner);
+  meta.appendChild(timeLabel);
+
+  const fields = document.createElement('div');
+  fields.className = 'fields';
+
+  fields.appendChild(makeTextField('Plan', 'plan', p));
+  fields.appendChild(makeTextField('Transport', 'transport', p));
+  fields.appendChild(makeDateTimeField('Date/Time', 'datetime', p, timeLabel));
+  fields.appendChild(makeTextField('Location', 'location', p));
+
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const del = document.createElement('button');
+  del.className = 'small';
+  del.textContent = 'Delete';
+  del.onclick = async () => {
+    if (confirm('Delete this plan?')) {
+      saveStateToHistory();
+      model.plans = model.plans.filter(x => x.id !== p.id);
+      await saveModel();
+      render();
+    }
+  };
+
+  actions.appendChild(del);
+  card.appendChild(meta);
+  card.appendChild(fields);
+  card.appendChild(actions);
+
+  card.addEventListener('dragstart', (ev)=>{
+    ev.dataTransfer.setData('text/plain', p.id);
+  });
+
+  return card;
+}
+
+function makeTextField(labelText, fieldName, p) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'field';
+  const label = document.createElement('label');
+  label.textContent = labelText;
+  const value = document.createElement('div');
+  value.className = 'value';
+  value.contentEditable = 'true';
+  value.textContent = p[fieldName] || '';
+  value.dataset.field = fieldName;
+
+  value.addEventListener('blur', async ()=> {
+    const item = model.plans.find(x=>x.id===p.id);
+    if (item) {
+      const newValue = value.textContent.trim();
+      
+      // Validate length
+      if (newValue.length > 500) {
+        showError('Text too long! Maximum 500 characters.');
+        value.textContent = item[fieldName];
+        return;
+      }
+      
+      saveStateToHistory();
+      item[fieldName] = newValue;
+      await saveModel();
+    }
+  });
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(value);
+  return wrapper;
+}
+
+function makeDateTimeField(labelText, fieldName, p, timeLabel) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'field';
+  const label = document.createElement('label');
+  label.textContent = labelText;
+  
+  const input = document.createElement('input');
+  input.type = 'datetime-local';
+  input.value = p[fieldName] || '';
+
+  input.addEventListener('change', async ()=> {
+    const item = model.plans.find(x=>x.id===p.id);
+    if (!item) return;
+    
+    const newDateTime = input.value;
+    
+    // Validate: cannot schedule in the past
+    if (newDateTime) {
+      const selectedDate = new Date(newDateTime);
+      const now = new Date();
+      if (selectedDate < now) {
+        showError('ERROR: Cannot schedule events in the past!');
+        input.value = p[fieldName] || '';
+        return;
+      }
+    }
+    
+    // Validate: events must be at least 30 minutes apart
+    if (hasTimeConflict(newDateTime, p.id)) {
+      showError('ERROR: Another event is scheduled within 30 minutes of this time!');
+      input.value = p[fieldName] || '';
+      return;
+    }
+    
+    saveStateToHistory();
+    item[fieldName] = newDateTime;
+    await saveModel();
+    timeLabel.textContent = formatDateTime(newDateTime);
+  });
+
+  wrapper.appendChild(label);
+  wrapper.appendChild(input);
+  return wrapper;
+}
+
+document.getElementById('loginBtn').addEventListener('click', async ()=> {
+  const u = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value.trim();
+  
+  if (!u || !pw) { 
+    alert('Enter credentials'); 
+    return; 
+  }
+  
+  if (!users[u] || users[u].password !== pw) { 
+    alert('Invalid credentials'); 
+    return; 
+  }
+  
+  currentUser = u;
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('userBar').style.display = 'flex';
+  
+  model = await loadModel();
+  buildBoard();
+  render();
+});
+
+document.getElementById('logoutBtn').addEventListener('click', ()=> {
+  if (confirm('Log out?')) {
+    currentUser = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'flex';
+    document.getElementById('userBar').style.display = 'none';
+    undoStack.clear();
+    redoStack.clear();
+  }
+});
+
+document.getElementById('clearBtn').addEventListener('click', async ()=> {
+  if (confirm('Clear all plans?')) {
+    saveStateToHistory();
+    localStorage.removeItem(STORAGE_KEY);
+    model = { plans: [] };
+    render();
+  }
+});
+
+document.getElementById('printBtn').addEventListener('click', ()=> {
+  window.print();
+});
+
+// Undo button
+document.getElementById('undoBtn').addEventListener('click', async ()=> {
+  if (undoStack.isEmpty()) {
+    showError('Nothing to undo!');
+    return;
+  }
+  
+  redoStack.push(JSON.parse(JSON.stringify(model)));
+  model = undoStack.pop();
+  await saveModel();
+  render();
+});
+
+// Redo button
+document.getElementById('redoBtn').addEventListener('click', async ()=> {
+  if (redoStack.isEmpty()) {
+    showError('Nothing to redo!');
+    return;
+  }
+  
+  undoStack.push(JSON.parse(JSON.stringify(model)));
+  model = redoStack.pop();
+  await saveModel();
+  render();
+});
+
+// Export backup
+document.getElementById('exportBtn').addEventListener('click', ()=> {
+  try {
+    const backup = {
+      version: '1.0',
+      exportDate: new Date().toISOString(),
+      user: currentUser,
+      data: model
+    };
+    
+    const dataStr = JSON.stringify(backup, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `weekly-scheduler-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showError('✓ Backup exported successfully!');
+  } catch(e) {
+    console.error('Export error:', e);
+    showError('Failed to export backup.');
+  }
+});
+
+// Import backup
+document.getElementById('importBtn').addEventListener('click', ()=> {
+  document.getElementById('fileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', async (e)=> {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  try {
+    const text = await file.text();
+    const backup = JSON.parse(text);
+    
+    if (!backup.data || !backup.data.plans) {
+      throw new Error('Invalid backup file');
+    }
+    
+    if (confirm(`Import backup from ${backup.exportDate || 'unknown date'}? This will replace all current data.`)) {
+      saveStateToHistory();
+      model = backup.data;
+      await saveModel();
+      render();
+      showError('✓ Backup imported successfully!');
+    }
+    
+  } catch(e) {
+    console.error('Import error:', e);
+    showError('Failed to import backup. File may be corrupted.');
+  }
+  
+  e.target.value = '';
+});
+
+buildBoard();
+</script>
+</body>
+</html>
