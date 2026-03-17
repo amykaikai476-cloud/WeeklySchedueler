@@ -1,26 +1,15 @@
 FROM nginx:alpine
-COPY . /usr/share/nginx/html/
+RUN rm -rf /usr/share/nginx/html/*
+COPY index.html /usr/share/nginx/html/index.html
 EXPOSE 80
 ```
 
-Then **also rename your HTML file** in GitHub from `Weekly_schedueler.html` to `index.html` — Nginx looks for `index.html` by default.
+The `RUN rm -rf` line **clears the default Nginx page first**, so it can't show up anymore.
 
 ---
 
-## Steps
-
-1. Go to your GitHub repo
-2. Click on `Weekly_schedueler.html`
-3. Click the **pencil icon** (Edit)
-4. Click the filename at the top and rename it to `index.html`
-5. Commit the change
-6. Update your `Dockerfile` to the one above and commit that too
-7. Render will auto-redeploy — wait a minute and refresh your site
-
----
-
-Your repo should look like:
+## Make sure your repo looks exactly like this:
 ```
 your-repo/
-├── index.html       ← renamed from Weekly_schedueler.html
+├── index.html        ← must be named exactly this
 └── Dockerfile
