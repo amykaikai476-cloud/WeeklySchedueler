@@ -1,0 +1,23 @@
+{
+  "name": "weekly-scheduler",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
+```
+
+---
+
+## Then on Render, update your settings:
+
+- **Language:** `Node`
+- **Build Command:** `npm install`
+- **Start Command:** `node server.js`
+- **Dockerfile Path:** leave blank
+
+Your repo will have:
+```
+your-repo/
+├── index.html
+├── server.js
+└── package.json
